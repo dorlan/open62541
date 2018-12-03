@@ -10,8 +10,8 @@
 
 #define UA_INTERNAL
 #include "ua_network_tcp.h"
-#include "../deps/queue.h"
 #include "ua_util.h"
+#include "../deps/queue.h"
 
 #include <string.h> // memset
 
