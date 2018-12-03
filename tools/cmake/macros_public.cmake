@@ -14,20 +14,31 @@
 #   Arguments taking one value:
 #
 #   NAME            Full name of the generated files, e.g. di_nodeids
+#   TARGET_SUFFIX   Suffix for the resulting target. e.g. ids-di
 #   ID_PREFIX       Prefix for the generated node ID defines, e.g. NS_DI
 #   [OUTPUT_DIR]    Optional target directory for the generated files. Default is '${PROJECT_BINARY_DIR}/src_generated'
 #   FILE_CSV        Path to the .csv file containing the node ids, e.g. 'OpcUaDiModel.csv'
 #
 function(ua_generate_nodeid_header)
     set(options )
-    set(oneValueArgs NAME ID_PREFIX OUTPUT_DIR FILE_CSV)
+    set(oneValueArgs NAME ID_PREFIX OUTPUT_DIR FILE_CSV TARGET_SUFFIX)
     set(multiValueArgs )
     cmake_parse_arguments(UA_GEN_ID "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
+
+    if(NOT UA_GEN_ID_TARGET_SUFFIX OR "${UA_GEN_ID_TARGET_SUFFIX}" STREQUAL "")
+        message(FATAL_ERROR "ua_generate_nodeid_header function requires a value for the TARGET_SUFFIX argument")
+    endif()
 
     # Set default value for output dir
     if(NOT UA_GEN_ID_OUTPUT_DIR)
         set(UA_GEN_ID_OUTPUT_DIR ${PROJECT_BINARY_DIR}/src_generated)
     endif()
+    message("output: ${UA_GEN_ID_NAME}.h")
+
+
+    add_custom_target(open62541-generator-${UA_GEN_ID_TARGET_SUFFIX} DEPENDS
+                      ${UA_GEN_ID_OUTPUT_DIR}/${UA_GEN_ID_NAME}.h
+                      )
 
     # Header containing defines for all NodeIds
     add_custom_command(OUTPUT ${UA_GEN_ID_OUTPUT_DIR}/${UA_GEN_ID_NAME}.h
@@ -433,7 +444,9 @@ function(ua_generate_nodeset_and_datatypes)
             ID_PREFIX "${GEN_NAME_UPPER}"
             FILE_CSV "${UA_GEN_FILE_CSV}"
             OUTPUT_DIR "${UA_GEN_OUTPUT_DIR}"
+            TARGET_SUFFIX "ids-${UA_GEN_NAME}"
         )
+        set(NODESET_DEPENDS_TARGET ${NODESET_DEPENDS_TARGET} "open62541-generator-ids-${UA_GEN_NAME}")
     endif()
 
     # Create a list of nodesets on which this nodeset depends on
